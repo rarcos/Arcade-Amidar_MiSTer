@@ -57,7 +57,12 @@ port (
 
 	O_AUDIO          : out std_logic_vector(9 downto 0);
 
-	button_in        : in  std_logic_vector(7 downto 0);
+	ip_dip_switch    : in  std_logic_vector(5 downto 1);
+	ip_1p            : std_logic_vector(6 downto 0);
+   ip_2p            : std_logic_vector(6 downto 0);
+   ip_service       : std_logic;
+   ip_coin1         : std_logic;
+   ip_coin2         : std_logic;
 
 	dn_addr          : in  std_logic_vector(15 downto 0);
 	dn_data          : in  std_logic_vector(7 downto 0);
@@ -78,12 +83,12 @@ architecture RTL of SCRAMBLE_TOP is
 constant I_HWSEL_FROGGER  : boolean := false;
 
 -- ip registers
-signal ip_1p            : std_logic_vector(6 downto 0);
-signal ip_2p            : std_logic_vector(6 downto 0);
-signal ip_service       : std_logic;
-signal ip_coin1         : std_logic;
-signal ip_coin2         : std_logic;
-signal ip_dip_switch    : std_logic_vector(5 downto 1);
+--signal ip_1p            : std_logic_vector(6 downto 0);
+--signal ip_2p            : std_logic_vector(6 downto 0);
+--signal ip_service       : std_logic;
+--signal ip_coin1         : std_logic;
+--signal ip_coin2         : std_logic;
+--signal ip_dip_switch    : std_logic_vector(5 downto 1);
 
 -- ties to audio board
 signal audio_addr       : std_logic_vector(15 downto 0);
@@ -186,25 +191,25 @@ port map (
 
 -- assign inputs
 -- start, shoot1, shoot2, left,right,up,down
-ip_1p(6) <= button_in(4); -- start 1
-ip_1p(5) <= button_in(6); -- shoot1
-ip_1p(4) <= button_in(6); -- shoot2
-ip_1p(3) <= button_in(2); -- p1 left
-ip_1p(2) <= button_in(3); -- p1 right
-ip_1p(1) <= button_in(0); -- p1 up
-ip_1p(0) <= button_in(1); -- p1 down
---
-ip_2p(6) <= button_in(7); -- start 2
-ip_2p(5) <= button_in(6);
-ip_2p(4) <= button_in(6);
-ip_2p(3) <= button_in(2); -- p2 left
-ip_2p(2) <= button_in(3); -- p2 right
-ip_2p(1) <= button_in(0); -- p2 up
-ip_2p(0) <= button_in(1); -- p2 down
---
-ip_service <= '1';
-ip_coin1   <= button_in(5); -- credit
-ip_coin2   <= '1';
+--ip_1p(6) <= button_in_1(4); -- start 1
+--ip_1p(5) <= button_in_1(6); -- shoot1
+--ip_1p(4) <= button_in_1(6); -- shoot2
+--ip_1p(3) <= button_in_1(2); -- p1 left
+--ip_1p(2) <= button_in_1(3); -- p1 right
+--ip_1p(1) <= button_in_1(0); -- p1 up
+--ip_1p(0) <= button_in_1(1); -- p1 down
+----
+--ip_2p(6) <= button_in(7); -- start 2
+--ip_2p(5) <= button_in(6);
+--ip_2p(4) <= button_in(6);
+--ip_2p(3) <= button_in(2); -- p2 left
+--ip_2p(2) <= button_in(3); -- p2 right
+--ip_2p(1) <= button_in(0); -- p2 up
+--ip_2p(0) <= button_in(1); -- p2 down
+----
+--ip_service <= '1';
+--ip_coin1   <= button_in(5); -- credit
+--ip_coin2   <= '1';
 
 -- dip switch settings
 scramble_dips : if (not I_HWSEL_FROGGER) generate
@@ -224,9 +229,9 @@ begin
 	--ON      OFF           2
 	--ON      ON            1
 
-	ip_dip_switch(5 downto 4)  <= not "11"; -- 1 play/coin.
-	ip_dip_switch(3)           <= not '1';
-	ip_dip_switch(2 downto 1)  <= not "01";
+	--ip_dip_switch(5 downto 4)  <= not "11"; -- 1 play/coin.
+	--ip_dip_switch(3)           <= not '1';
+	--ip_dip_switch(2 downto 1)  <= not "01";
 end generate;
 
 frogger_dips : if (    I_HWSEL_FROGGER) generate
@@ -246,9 +251,9 @@ begin
 	--            Off On      3 coins 1 play
 	--            Off Off     1 coin 2 plays
 
-	ip_dip_switch(5 downto 4)  <= not "11";
-	ip_dip_switch(3)           <= not '1';
-	ip_dip_switch(2 downto 1)  <= not "01";
+--	ip_dip_switch(5 downto 4)  <= not "11";
+--	ip_dip_switch(3)           <= not '1';
+--	ip_dip_switch(2 downto 1)  <= not "01";
 end generate;
 
 end RTL;
