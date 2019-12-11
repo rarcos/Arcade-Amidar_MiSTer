@@ -267,14 +267,14 @@ wire hs, vs;
 wire [3:0] r,g;
 wire [3:0] b;
 
-
 reg ce_pix;
 always @(posedge clk_sys) begin
-        reg old_clk;
+        reg [1:0] div;
 
-        old_clk <= ce_6p;
-        ce_pix <= old_clk & ~ce_6p;
+        div <= div + 1'd1;
+        ce_pix <= !div;
 end
+
 arcade_rotate_fx #(258,224,12,0) arcade_video
 (
         .*,
@@ -316,9 +316,9 @@ scramble_top amidar
 	.ip_dip_switch(m_dip),
 	.ip_1p(~{m_start1|btn_start_1,m_fire,m_fire,m_left,m_right,m_up,m_down}),
 	.ip_2p(~{m_start2|btn_start_2,m_fire_2,m_fire_2,m_left_2,m_right_2,m_up_2,m_down_2}),
-   .ip_service(~status[14]),
-   .ip_coin1(m_coin|btn_coin_1),
-   .ip_coin2(btn_coin_2),
+	.ip_service(~status[14]),
+	.ip_coin1(m_coin|btn_coin_1),
+	.ip_coin2(btn_coin_2),
 
 	.RESET(RESET | status[0] | ioctl_download | buttons[1]),
 	.clk(clk_sys),
