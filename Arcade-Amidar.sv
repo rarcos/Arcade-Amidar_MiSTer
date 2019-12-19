@@ -29,7 +29,7 @@ module emu
 	input         RESET,
 
 	//Must be passed to hps_io module
-	inout  [44:0] HPS_BUS,
+	inout  [45:0] HPS_BUS,
 
 	//Base video clock. Usually equals to CLK_SYS.
 	output        VGA_CLK,
@@ -44,6 +44,7 @@ module emu
 	output        VGA_HS,
 	output        VGA_VS,
 	output        VGA_DE,    // = ~(VBlank | HBlank)
+	output        VGA_F1,
 
 	//Base video clock. Usually equals to CLK_SYS.
 	output        HDMI_CLK,
@@ -74,9 +75,21 @@ module emu
 
 	output [15:0] AUDIO_L,
 	output [15:0] AUDIO_R,
-	output        AUDIO_S    // 1 - signed audio samples, 0 - unsigned
+	output        AUDIO_S,   // 1 - signed audio samples, 0 - unsigned
+	
+	// Open-drain User port.
+	// 0 - D+/RX
+	// 1 - D-/TX
+	// 2..6 - USR2..USR6
+	// Set USER_OUT to 1 to read from USER_IN.
+	input   [6:0] USER_IN,
+	output  [6:0] USER_OUT
+	
+	
 );
 
+assign VGA_F1    = 0;
+assign USER_OUT  = '1;
 assign LED_USER  = ioctl_download;
 assign LED_DISK  = 0;
 assign LED_POWER = 0;
@@ -87,8 +100,6 @@ assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd4;
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.AMIDAR;;",
-	"F,rom;", // allow loading of alternate ROMs
-	"-;",
 	"O1,Aspect Ratio,Original,Wide;",
 	"O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
@@ -106,7 +117,7 @@ localparam CONF_STR = {
 wire [5:1] m_dip = {status[13],status[11],status[12],~status[9:8]};
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys;
+wire clk_sys,clk_48;
 wire pll_locked;
 
 pll pll
@@ -114,6 +125,7 @@ pll pll
 	.refclk(CLK_50M),
 	.rst(0),
 	.outclk_0(clk_sys),
+	.outclk_1(clk_48),
 	.locked(pll_locked)
 );
 
@@ -152,6 +164,9 @@ wire [10:0] ps2_key;
 wire [15:0] joystick_0, joystick_1;
 wire [15:0] joy = joystick_0 | joystick_1;
 
+wire [21:0] gamma_bus;
+
+
 hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 (
 	.clk_sys(clk_sys),
@@ -162,6 +177,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 	.buttons(buttons),
 	.status(status),
 	.forced_scandoubler(forced_scandoubler),
+	.gamma_bus(gamma_bus),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
@@ -191,9 +207,6 @@ always @(posedge clk_sys) begin
 			'h005: btn_one_player  <= pressed; // F1
 			'h006: btn_two_players <= pressed; // F2
 			// JPAC/IPAC/MAME Style Codes
-
-			'h005: btn_one_player  <= pressed; // F1
-			'h006: btn_two_players <= pressed; // F2
 			'h016: btn_start_1     <= pressed; // 1
 			'h01E: btn_start_2     <= pressed; // 2
 			'h02E: btn_coin_1      <= pressed; // 5
@@ -252,22 +265,19 @@ wire hs, vs;
 wire [3:0] r,g;
 wire [3:0] b;
 
-
 reg ce_pix;
 always @(posedge clk_sys) begin
-        reg old_clk;
+        reg [1:0] div;
 
-        old_clk <= ce_6p;
-        ce_pix <= old_clk & ~ce_6p;
+        div <= div + 1'd1;
+        ce_pix <= !div;
 end
 
 arcade_rotate_fx #(258,224,12,0) arcade_video
-//arcade_rotate_fx #(264,224,12,0) arcade_video
 (
         .*,
 
         .clk_video(clk_sys),
-
         .RGB_in({r,g,b}),
         .HBlank(hblank),
         .VBlank(vblank),
@@ -304,9 +314,9 @@ scramble_top amidar
 	.ip_dip_switch(m_dip),
 	.ip_1p(~{m_start1|btn_start_1,m_fire,m_fire,m_left,m_right,m_up,m_down}),
 	.ip_2p(~{m_start2|btn_start_2,m_fire_2,m_fire_2,m_left_2,m_right_2,m_up_2,m_down_2}),
-   .ip_service(~status[14]),
-   .ip_coin1(m_coin|btn_coin_1),
-   .ip_coin2(btn_coin_2),
+	.ip_service(~status[14]),
+	.ip_coin1(m_coin|btn_coin_1),
+	.ip_coin2(btn_coin_2),
 
 	.RESET(RESET | status[0] | ioctl_download | buttons[1]),
 	.clk(clk_sys),
