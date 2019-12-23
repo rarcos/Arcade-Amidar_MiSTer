@@ -100,8 +100,8 @@ assign HDMI_ARY = status[1] ? 8'd9  : status[2] ? 8'd3 : 8'd4;
 `include "build_id.v" 
 localparam CONF_STR = {
 	"A.AMIDAR;;",
-	"O1,Aspect Ratio,Original,Wide;",
-	"O2,Orientation,Vert,Horz;",
+	"H0O1,Aspect Ratio,Original,Wide;",
+	"H0O2,Orientation,Vert,Horz;",
 	"O35,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"-;",
 	"O89,Lives,3,5,4,255(Cheat);",
@@ -153,6 +153,8 @@ end
 wire [31:0] status;
 wire  [1:0] buttons;
 wire        forced_scandoubler;
+wire	    direct_video;
+
 
 wire        ioctl_download;
 wire        ioctl_wr;
@@ -176,8 +178,10 @@ hps_io #(.STRLEN($size(CONF_STR)>>3)) hps_io
 
 	.buttons(buttons),
 	.status(status),
+	.status_menumask(direct_video),
 	.forced_scandoubler(forced_scandoubler),
-	.gamma_bus(gamma_bus),
+        .gamma_bus(gamma_bus),
+        .direct_video(direct_video),
 
 	.ioctl_download(ioctl_download),
 	.ioctl_wr(ioctl_wr),
@@ -240,18 +244,19 @@ reg btn_right_2=0;
 reg btn_fire_2=0;
 reg btn_test=0;
 
+wire no_rotate = status[2] & ~direct_video;
 
-wire m_up_2     = status[2] ? btn_left_2  | joy[1] : btn_up_2    | joy[3];
-wire m_down_2   = status[2] ? btn_right_2 | joy[0] : btn_down_2  | joy[2];
-wire m_left_2   = status[2] ? btn_down_2  | joy[2] : btn_left_2  | joy[1];
-wire m_right_2  = status[2] ? btn_up_2    | joy[3] : btn_right_2 | joy[0];
+wire m_up_2     = no_rotate ? btn_left_2  | joy[1] : btn_up_2    | joy[3];
+wire m_down_2   = no_rotate ? btn_right_2 | joy[0] : btn_down_2  | joy[2];
+wire m_left_2   = no_rotate ? btn_down_2  | joy[2] : btn_left_2  | joy[1];
+wire m_right_2  = no_rotate ? btn_up_2    | joy[3] : btn_right_2 | joy[0];
 wire m_fire_2  = btn_fire_2|joy[4];
 
 
-wire m_up     = status[2] ? btn_left  | joy[1] : btn_up    | joy[3];
-wire m_down   = status[2] ? btn_right | joy[0] : btn_down  | joy[2];
-wire m_left   = status[2] ? btn_down  | joy[2] : btn_left  | joy[1];
-wire m_right  = status[2] ? btn_up    | joy[3] : btn_right | joy[0];
+wire m_up     = no_rotate ? btn_left  | joy[1] : btn_up    | joy[3];
+wire m_down   = no_rotate ? btn_right | joy[0] : btn_down  | joy[2];
+wire m_left   = no_rotate ? btn_down  | joy[2] : btn_left  | joy[1];
+wire m_right  = no_rotate ? btn_up    | joy[3] : btn_right | joy[0];
 wire m_fire   = btn_fire | joy[4];
 
 wire m_start1 = btn_one_player  | joy[5];
@@ -266,7 +271,7 @@ wire [3:0] r,g;
 wire [3:0] b;
 
 reg ce_pix;
-always @(posedge clk_sys) begin
+always @(posedge clk_48) begin
         reg [1:0] div;
 
         div <= div + 1'd1;
@@ -277,7 +282,7 @@ arcade_rotate_fx #(258,224,12,0) arcade_video
 (
         .*,
 
-        .clk_video(clk_sys),
+        .clk_video(clk_48),
         .RGB_in({r,g,b}),
         .HBlank(hblank),
         .VBlank(vblank),
@@ -285,7 +290,6 @@ arcade_rotate_fx #(258,224,12,0) arcade_video
         .VSync(vs),
 
         .fx(status[5:3]),
-        .no_rotate(status[2])
 );
 
 
