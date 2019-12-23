@@ -117,15 +117,15 @@ localparam CONF_STR = {
 wire [5:1] m_dip = {status[13],status[11],status[12],~status[9:8]};
 ////////////////////   CLOCKS   ///////////////////
 
-wire clk_sys,clk_48;
+wire clk_sys,clk_49;
 wire pll_locked;
 
 pll pll
 (
 	.refclk(CLK_50M),
 	.rst(0),
-	.outclk_0(clk_sys),
-	.outclk_1(clk_48),
+	.outclk_0(clk_49),
+	.outclk_1(clk_sys),
 	.locked(pll_locked)
 );
 
@@ -271,25 +271,26 @@ wire [3:0] r,g;
 wire [3:0] b;
 
 reg ce_pix;
-always @(posedge clk_48) begin
-        reg [1:0] div;
+always @(posedge clk_49) begin
+        reg [2:0] div;
 
         div <= div + 1'd1;
         ce_pix <= !div;
 end
 
 arcade_rotate_fx #(258,224,12,0) arcade_video
+//arcade_rotate_fx #(516,448,12,0) arcade_video
 (
         .*,
 
-        .clk_video(clk_48),
+        .clk_video(clk_49),
         .RGB_in({r,g,b}),
         .HBlank(hblank),
         .VBlank(vblank),
         .HSync(hs),
         .VSync(vs),
 
-        .fx(status[5:3]),
+        .fx(status[5:3])
 );
 
 
