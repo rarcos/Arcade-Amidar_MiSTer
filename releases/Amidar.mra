@@ -35,4 +35,18 @@
 		<part name="s1.5c"/>
 		<part name="s2.5d"/>
 	</rom>
+	<rom index="0" zip="amidars.zip" md5="29dbfb61bc9e45f2cebe63743de85a57" type="split">
+		<part name="am2d"/>
+		<part name="am2e"/>
+		<part name="am2f"/>
+		<part name="am2h"/>
+		<part name="am2j"/>
+		<part name="am2l"/>
+		<part name="am2m"/>
+		<part name="am2p"/>
+		<part name="2716.a5"/>
+		<part name="2716.a6"/>
+		<part name="s1.5c" zip="amidar.zip"/>
+		<part name="s2.5d" zip="amidar.zip"/>
+	</rom>
 </misterromdescription>
